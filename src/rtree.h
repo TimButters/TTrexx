@@ -2,34 +2,45 @@
 #define RTREE_H
 
 #include <iostream>
-#include "tree.h"
+#include "node.h"
 
-template <class T> class RTree : public Tree<T> {
+template <class T> class RTree : public Node<T> {
+  private:
+    typedef typename Node<T>::MBR MBR;
+    typedef typename Node<T>::NodePtr NodePtr;
   public:
-    RTree() : Tree<T>() {}
-    T search() {} // Clearly needs implementing, just needs setting to make class concrete.
+    RTree() : Node<T>() {}
+    /*T search() {}
     void del(T) {}
     void condense() {}
-    void adjust() {}
+    void adjust() {}*/
     
     void insert(T entry);
     void print_tree(); //For debugging
 };
 
 template <class T>
-void RTree<T>::insert(T entry)
+void RTree<T>::insert(T new_entry)
 {
-  this->children.push_back(std::make_tuple(1.0,2.0,3.0, entry));
+  MBR rect(3);
+  rect[0] = 1;
+  rect[1] = 2;
+  rect[2] = 3;
+
+  this->children.push_back(std::make_pair(rect, std::unique_ptr<Node<T>>(new Node<T>(new_entry))));
 }
 
 template <class T>
 void RTree<T>::print_tree() //For debugging
 {
-  for (auto &each : this->children) {
-    std::cout << std::get<0>(each) << std::endl;
-    std::cout << std::get<1>(each) << std::endl;
-    std::cout << std::get<2>(each) << std::endl;
-    std::cout << std::get<3>(each) << std::endl;
+  std::cout << "Rect:" << std::endl;
+  std::cout << "\t" << this->children.front().first[0] << std::endl;
+  std::cout << "\t" << this->children.front().first[1] << std::endl;
+  std::cout << "\t" << this->children.front().first[2] << std::endl;
+  std::cout << std::endl;
+ 
+  if (this->children.front().second->is_leaf()) {
+    std::cout << "Entry: " << this->children.front().second->get_entry() << std::endl;
   }
 }
 
