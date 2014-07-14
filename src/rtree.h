@@ -11,7 +11,7 @@ template <class T> class RTree : public Node<T> {
     typedef typename Node<T>::NodeList NodeList;
 
     int height;
-    int max_fill;
+    int max_fill=3;
     int dimensions;
 
   public:
@@ -23,39 +23,52 @@ template <class T> class RTree : public Node<T> {
     Node<T>* search_box(const T&);
     Node<T>* search_box(const T&, const NodePtr&);
     bool contained(const MBR rect, const T entry);
+    
+    
     void print_tree(); //For debugging
-    void polymorph() {}
+    //void polymorph() {}
 };
 
 template <class T>
 void RTree<T>::insert(T new_entry)
 {
-  MBR rect(3);
-  rect[0] = 1;
-  rect[1] = 2;
-  rect[2] = 3;
-      
   if (this->children.empty()) {
       this->entries.push_back(new_entry);
       if (!this->is_leaf()) {
         this->leaf = true;
       }
+      if (this->entries.size() > max_fill) {
+        /*MBR new_node_rect(2*dimensions);
+        MBR this_node_rect(2*dimensions);
+        new_node_rect[0] = 0;
+        new_node_rect[1] = 4;
+        new_node_rect[2] = 0;
+        new_node_rect[3] = 4;
+        this_node_rect[0] = 4;
+        this_node_rect[1] = 8;
+        this_node_rect[2] = 4;
+        this_node_rect[3] = 8;
+        this->children.push_back(std::make_pair(new_node_rect, this->split()));
+        this->children.push_back(std::make_pair(this_node_rect, NodePtr(new Node<T>(this->entries))));*/
+        this->children.push_back(this->split());
+        this->children.push_back(std::make_pair(this->find_mbr(this->entries), NodePtr(new Node<T>(this->entries))));
+        this->entries.clear();
+        this->leaf = false;
+      }
   } else {
-
-    //search_ptr should point to a node
-    Node<T>* search_ptr = this->search_box(new_entry); //FIX THIS
+    Node<T>* search_ptr = this->search_box(new_entry);
     if ( search_ptr->is_leaf() ) {
-      //add entry to existing leaf node.
       search_ptr->entries.push_back(new_entry);
     } else {
-
+      MBR rect(2*dimensions);
+      rect[0] = rect[1] = new_entry[0];
+      rect[2] = rect[3] = new_entry[1];
       for (int i = search_ptr->level(); i < height-1; ++i) {
         search_ptr->children.push_back(std::make_pair(rect, NodePtr(new Node<T>())));
-        search_ptr = search_ptr->children.back().second.get(); // Use unique_ptr get() method.
+        search_ptr = search_ptr->children.back().second.get();
       }
       search_ptr->entries.push_back(new_entry);
       search_ptr->set_leaf(true);
-    
     }
   }
   //AdjustTree();
@@ -64,13 +77,18 @@ void RTree<T>::insert(T new_entry)
 template <class T>
 void RTree<T>::print_tree() //For debugging
 {
-  std::cout << "Rect:" << std::endl;
-  std::cout << "\t" << this->children.front().first[0] << std::endl;
-  std::cout << "\t" << this->children.front().first[1] << std::endl;
-  std::cout << "\t" << this->children.front().first[2] << std::endl;
-  std::cout << std::endl;
-
-  if (this->is_leaf()) {
+  if (!this->is_leaf()) {
+    for (const auto &c : this->children) {
+      std::cout << "Rect:" << std::endl;
+      for (const auto e : c.first) { 
+        std::cout << "\t" << e;
+      }
+      std::cout << std::endl;
+      c.second->print_node();
+      std::cout << std::endl;
+    }
+  } else {
+    std::cout << "Leaf:" << std::endl;
     for (auto e : this->entries) {
       std::cout << e << std::endl;
     }
