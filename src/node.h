@@ -119,5 +119,19 @@ template <class T> void Node<T>::print_node()
   }
 }
 
+double operator- (std::vector<double> &lhs, std::vector<double> &rhs)
+{
+  double lhs_area = 1;
+  for (int i = 0; i<rhs.size(); i+=2) {
+    lhs_area *= lhs[i+1] - lhs[i];
+  }
+  double rhs_area = 1;
+  for (int i = 0; i<rhs.size(); i+=2) {
+    rhs_area *= rhs[i+1] - rhs[i];
+  }
+  return lhs_area - rhs_area;
+}
+
+
 
 #endif

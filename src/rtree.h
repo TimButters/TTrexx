@@ -38,18 +38,6 @@ void RTree<T>::insert(T new_entry)
         this->leaf = true;
       }
       if (this->entries.size() > max_fill) {
-        /*MBR new_node_rect(2*dimensions);
-        MBR this_node_rect(2*dimensions);
-        new_node_rect[0] = 0;
-        new_node_rect[1] = 4;
-        new_node_rect[2] = 0;
-        new_node_rect[3] = 4;
-        this_node_rect[0] = 4;
-        this_node_rect[1] = 8;
-        this_node_rect[2] = 4;
-        this_node_rect[3] = 8;
-        this->children.push_back(std::make_pair(new_node_rect, this->split()));
-        this->children.push_back(std::make_pair(this_node_rect, NodePtr(new Node<T>(this->entries))));*/
         this->children.push_back(this->split());
         this->children.push_back(std::make_pair(this->find_mbr(this->entries), NodePtr(new Node<T>(this->entries))));
         this->entries.clear();
@@ -58,17 +46,39 @@ void RTree<T>::insert(T new_entry)
   } else {
     Node<T>* search_ptr = this->search_box(new_entry);
     if ( search_ptr->is_leaf() ) {
+
       search_ptr->entries.push_back(new_entry);
+      // Split Node if it overflows.
+      //if (search_ptr->entries.size() > max_fill) {
+      //  search_ptr->split();
+      //}
+
     } else {
-      MBR rect(2*dimensions);
-      rect[0] = rect[1] = new_entry[0];
-      rect[2] = rect[3] = new_entry[1];
+      // if (next node is leaf) {
+      std::list<T> points;
+      typename NodeList::iterator iter, min_expansion;
+      double best_fit = std::numeric_limits<double>::infinity();
+      for (iter = search_ptr->children.begin(); iter != search_ptr->children.end(); ++iter) {
+        MBR curr_mbr = iter->first;
+        points = iter->second->entries;
+        points.push_back(new_entry);
+        MBR new_mbr = this->find_mbr(points);
+        if (new_mbr - curr_mbr < best_fit) {
+          best_fit = new_mbr - curr_mbr;
+          min_expansion = iter;
+        }
+      }
+      min_expansion->second->entries.push_back(new_entry);
+      min_expansion->first = this->find_mbr(min_expansion->second->entries);
+      //}
+
+      /*std::cout << "Making New" << std::endl;
       for (int i = search_ptr->level(); i < height-1; ++i) {
         search_ptr->children.push_back(std::make_pair(rect, NodePtr(new Node<T>())));
         search_ptr = search_ptr->children.back().second.get();
       }
       search_ptr->entries.push_back(new_entry);
-      search_ptr->set_leaf(true);
+      search_ptr->set_leaf(true);*/
     }
   }
   //AdjustTree();
@@ -140,7 +150,7 @@ Node<T>* RTree<T>::search_box(const T &entry, const NodePtr &node)
   bool diving = false;
 
   if (node->is_leaf()) {
-    return this;
+    return node.get();
   } else {
     for (auto &p : node->children) {
       if (contained(p.first, entry)) {
@@ -157,17 +167,14 @@ Node<T>* RTree<T>::search_box(const T &entry, const NodePtr &node)
 template <class T>
 bool RTree<T>::contained(const MBR rect, const T entry)
 {
-  int i = 0;
-  bool outside = false;
-  
-  while (i < dimensions && !outside) {
-    if (i % 2) {
-      outside = entry[i] > rect[i];
-    } else {
-      outside = entry[i] < rect[i];
+  bool inside = false;
+  for (int i = 0, j = 0; i < dimensions; ++i, j+=2) {
+    inside = entry[i] >= rect[j] && entry[i] <= rect[j+1];
+    if (!inside) {
+      return false;
     }
   }
-  return !outside;
+  return inside;
 }
   
 

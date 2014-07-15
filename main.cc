@@ -22,10 +22,15 @@ int main(int argc, char *argv[])
   std::cout << "4" << std::endl;
   tree.insert(point);
   
-  point[0] = 4;
-  point[1] = 3;
-  //std::cout << "5" << std::endl;
-  //tree.insert(point);
+  point[0] = 2;
+  point[1] = 2;
+  std::cout << "5" << std::endl;
+  tree.insert(point);
+  
+  point[0] = 6;
+  point[1] = 8;
+  std::cout << "5" << std::endl;
+  tree.insert(point);
   
   tree.print_tree();
 
