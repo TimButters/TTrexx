@@ -2,6 +2,7 @@
 #define RTREE_H
 
 #include <iostream>
+#include <limits>
 #include "node.h"
 
 template <class T> class RTree : public Node<T> {
@@ -71,14 +72,6 @@ void RTree<T>::insert(T new_entry)
       min_expansion->second->entries.push_back(new_entry);
       min_expansion->first = this->find_mbr(min_expansion->second->entries);
       //}
-
-      /*std::cout << "Making New" << std::endl;
-      for (int i = search_ptr->level(); i < height-1; ++i) {
-        search_ptr->children.push_back(std::make_pair(rect, NodePtr(new Node<T>())));
-        search_ptr = search_ptr->children.back().second.get();
-      }
-      search_ptr->entries.push_back(new_entry);
-      search_ptr->set_leaf(true);*/
     }
   }
   //AdjustTree();

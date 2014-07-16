@@ -3,8 +3,9 @@
 
 #include <list>
 #include <vector>
-#include <utility>
+#include <limits>
 #include <memory>
+#include <utility>
 #include <iostream>
 #include <algorithm>
 
@@ -16,10 +17,8 @@ template <class T> class Node {
     typedef std::pair<MBR, NodePtr> NodePair;
     typedef std::list<NodePair> NodeList;
 
-    //std::list<T> entries;
     int level_;
     bool leaf;
-    //T entry;
   
   public:
     NodeList children;
@@ -27,7 +26,6 @@ template <class T> class Node {
     
     Node() {leaf = false;}
     Node(std::list<T>);
-    //T get_entry() {return entry;}
     bool is_leaf() {return leaf;}
     void set_leaf(bool b) {leaf = b;}
     int level() {return level_;}
@@ -84,8 +82,8 @@ typename Node<T>::MBR Node<T>::find_mbr(std::list<T> points)
   MBR rect(2*dim);
   for (int i = 0, count = 0; i < 2*dim; i+=dim, ++count) {
     /* making these doubles violates template! */
-    double max = -10000; //make -inf
-    double min = 10000;// make inf
+    double max = -std::numeric_limits<double>::infinity(); //-10000; //make -inf
+    double min = std::numeric_limits<double>::infinity(); //10000;// make inf
     for (const auto &p : points) {
       typename T::const_iterator iter = p.begin();
       advance(iter, count);
@@ -131,7 +129,5 @@ double operator- (std::vector<double> &lhs, std::vector<double> &rhs)
   }
   return lhs_area - rhs_area;
 }
-
-
 
 #endif
