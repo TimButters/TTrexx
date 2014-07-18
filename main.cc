@@ -50,6 +50,17 @@ int main(int argc, char *argv[])
   tree.insert(point);
   
   tree.print_tree();
+  /****************/
+
+  std::cout << std::endl << "---------------------------------------------" << std::endl; 
+  std::cout << "The next entry overflows the leaf node so it is split and the\n"
+            << "change is propogated up the tree.\n" << std::endl;
+
+  point[0] = 6;
+  point[1] = 6;
+  tree.insert(point);
+
+  tree.print_tree();
 
   return 0;
 }

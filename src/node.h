@@ -19,17 +19,21 @@ template <class T> class Node {
 
     int level_;
     bool leaf;
+    Node<T>* up_ = NULL;
   
   public:
     NodeList children;
     std::list<T> entries;
     
     Node() {leaf = false;}
-    Node(std::list<T>);
-    bool is_leaf() {return leaf;}
-    void set_leaf(bool b) {leaf = b;}
-    int level() {return level_;}
-    NodePair split();
+    Node(std::list<T>, Node<T>*);
+
+    //void set_leaf(bool b) {leaf = b;}
+    bool is_leaf()        {return leaf;}
+    Node<T>* up()         {return up_;}
+    int level()           {return level_;}
+    
+    NodePair split(Node<T>*, bool recalc_box=false);
     static MBR find_mbr(std::list<T>);
 
     void print_node();
@@ -52,14 +56,15 @@ std::ostream& operator<<(std::ostream &out, const std::vector<T> rhs)
   return out;
 }
 
-template <class T> Node<T>::Node(std::list<T> elems)
+template <class T> Node<T>::Node(std::list<T> elems, Node<T> *above)
 {
   entries = elems;
   leaf = true;
+  up_ = above;
 }
 
 template <class T> 
-typename Node<T>::NodePair Node<T>::split()
+typename Node<T>::NodePair Node<T>::split(Node<T> *above, bool recalc_box)
 {
   //Simple mock up function to split node.
   //if (leaf) {
@@ -69,7 +74,15 @@ typename Node<T>::NodePair Node<T>::split()
     advance(iter, n/2);
     std::copy(iter, entries.end(), std::back_inserter(tmp_list));
     entries.erase(iter, entries.end());
-    return std::make_pair(find_mbr(tmp_list), NodePtr(new Node<T>(tmp_list)));
+
+    if (recalc_box) {
+      auto index = std::find_if(above->children.begin(), above->children.end(), 
+                                [this](NodePair const& elem) {
+                                  return elem.second.get() == this;
+                                 });
+      index->first = find_mbr(entries);
+    }
+    return std::make_pair(find_mbr(tmp_list), NodePtr(new Node<T>(tmp_list, above)));
   //} else {
 
   //}
@@ -81,9 +94,8 @@ typename Node<T>::MBR Node<T>::find_mbr(std::list<T> points)
   int dim = points.front().size();
   MBR rect(2*dim);
   for (int i = 0, count = 0; i < 2*dim; i+=dim, ++count) {
-    /* making these doubles violates template! */
-    double max = -std::numeric_limits<double>::infinity(); //-10000; //make -inf
-    double min = std::numeric_limits<double>::infinity(); //10000;// make inf
+    double max = -std::numeric_limits<double>::infinity();
+    double min = std::numeric_limits<double>::infinity();
     for (const auto &p : points) {
       typename T::const_iterator iter = p.begin();
       advance(iter, count);

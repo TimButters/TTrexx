@@ -39,8 +39,8 @@ void RTree<T>::insert(T new_entry)
         this->leaf = true;
       }
       if (this->entries.size() > max_fill) {
-        this->children.push_back(this->split());
-        this->children.push_back(std::make_pair(this->find_mbr(this->entries), NodePtr(new Node<T>(this->entries))));
+        this->children.push_back(this->split(this));
+        this->children.push_back(std::make_pair(this->find_mbr(this->entries), NodePtr(new Node<T>(this->entries, this))));
         this->entries.clear();
         this->leaf = false;
       }
@@ -50,9 +50,11 @@ void RTree<T>::insert(T new_entry)
 
       search_ptr->entries.push_back(new_entry);
       // Split Node if it overflows.
-      //if (search_ptr->entries.size() > max_fill) {
-      //  search_ptr->split();
-      //}
+      if (search_ptr->entries.size() > max_fill) {
+        search_ptr->up()->children.push_back(search_ptr->split(search_ptr->up(), true));
+        //MBR for entry in children to this node needs re-calculating.
+        //Propogate change up tree.
+      }
 
     } else {
       // if (next node is leaf) {
@@ -71,6 +73,12 @@ void RTree<T>::insert(T new_entry)
       }
       min_expansion->second->entries.push_back(new_entry);
       min_expansion->first = this->find_mbr(min_expansion->second->entries);
+      //Split Node if it overflows.
+      if (min_expansion->second->entries.size() > max_fill) {
+        this->children.push_back(min_expansion->second->split(this));
+        min_expansion->first = this->find_mbr(min_expansion->second->entries);
+        //Propogate changes up tree
+      }
       //}
     }
   }
