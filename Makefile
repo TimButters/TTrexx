@@ -1,4 +1,4 @@
-CXX=g++-4.9
+CXX=g++
 CXXFLAGS=-std=c++11 -O3
 
 tree: src/*.h main.cc

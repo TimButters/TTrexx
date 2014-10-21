@@ -40,19 +40,20 @@ void RTree<T>::insert(T new_entry)
       }
       if (this->entries.size() > max_fill) {
         this->children.push_back(this->split(this));
-        this->children.push_back(std::make_pair(this->find_mbr(this->entries), NodePtr(new Node<T>(this->entries, this))));
+        this->children.push_back(std::make_pair(this->find_mbr(this->entries), 
+                                 NodePtr(new Node<T>(this->entries, this))));
         this->entries.clear();
         this->leaf = false;
       }
   } else {
     Node<T>* search_ptr = this->search_box(new_entry);
-    if ( search_ptr->is_leaf() ) {
 
+    if ( search_ptr->is_leaf() ) {
       search_ptr->entries.push_back(new_entry);
       // Split Node if it overflows.
       if (search_ptr->entries.size() > max_fill) {
+        //MBR for entry in children to this node needs re-calculating, so pass true to split() function.
         search_ptr->up()->children.push_back(search_ptr->split(search_ptr->up(), true));
-        //MBR for entry in children to this node needs re-calculating.
         //Propogate change up tree.
       }
 
