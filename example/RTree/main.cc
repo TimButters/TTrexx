@@ -1,4 +1,4 @@
-#include "src/rtree.h"
+#include <RTree.h>
 
 int main(int argc, char *argv[])
 {
